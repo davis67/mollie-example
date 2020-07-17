@@ -18,7 +18,7 @@ Route::get('/', function () {
 });
 
 Route::get('/test', function () {
-    return auth()->user()->status;
+    return auth()->user()->subscriptions;
 });
 
 Route::get('/subscription', function () {
