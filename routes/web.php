@@ -12,18 +12,18 @@ use Illuminate\Support\Facades\Auth;
 | contains the "web" middleware group. Now create something great!
 |
 */
-Auth::loginUsingId(3);
+// Auth::loginUsingId(1);
 Route::get('/', function () {
     return view('welcome');
 });
 
 Route::get('/test', function () {
-    return auth()->user()->current_plan->cancelled();
+    return auth()->user()->status;
 });
 
 Route::get('/subscription', function () {
     $user = Auth::user();
-    return Auth::user()->subscribed('premium')?'yes you have sunscribed to premium':'no you are still under basic' ;
+    return Auth::user()->subscribed('Premium membership')?'yes you have sunscribed to premium':'no you are still under basic' ;
 });
 
 
@@ -35,4 +35,5 @@ Route::middleware('auth')->group(function () {
     Route::get('billing', 'BillingController@index')->name('billing');
     Route::get('cancel', 'CancelSubscriptionController@index')->name('cancel');
     Route::get('resume', 'ResumeSubscriptionController@index')->name('resume');
+    Route::get('premium', 'PremiumController@index')->name('premium');
 });

@@ -1,39 +1,21 @@
-<!-- cancelled -->
-@if(auth()->user()->current_plan && auth()->user()->current_plan->cancelled())
-	<div class="col-12 mx-auto">
-	    <h2 class="">Billing</h2>
-	    <hr class="tw-border-b-2 w-full tw-border-gray-300"></hr>
-	    <div class="jumbotron">
-	      <h1 class="">Current Plan</h1>
-	      <p class="lead">Your current subscription was cancelled. Your grace Period will expire on {{\Carbon\Carbon::parse(auth()->user()->current_plan->ends_at)->isoFormat('ll')}}</p>
-	     	 <a href="{{route('resume')}}" class="btn btn-primary text-white">Resume</a>
-			<a href="{{route('home')}}" class="btn btn-primary text-white">Change Plan</a>
-	    </div>
-	</div>
+@if(Auth::user()->status === 'active')
+<div class="alert alert-warning">
+	<span>You are currently subscribed to {{auth()->user()->current_subscription->plan}}.Your  Subscription will expire on {{auth()->user()->currentCycle()}}</span>
+</div>
+@endif
+@if(Auth::user()->status === 'inactive')
+<div class="alert alert-warning">
+	<span>You are not subscribed to any subscription</span>
+</div>
 @endif
 
-<!-- expired -->
-@if(auth()->user()->current_plan && !auth()->user()->subscribed(auth()->user()->current_plan->name))
-	<div class="col-12 mx-auto">
-	    <h2 class="">Billing</h2>
-	    <hr class="tw-border-b-2 w-full tw-border-gray-300"></hr>
-	    <div class="jumbotron">
-	      <h1 class="">Current Plan</h1>
-	      <p class="lead">Your current subscription was expired on {{\Carbon\Carbon::parse(auth()->user()->current_plan->cycle_ended_at)->isoFormat('ll')}}.</p>
-	     	 <a href="{{route('resume')}}" class="btn btn-primary text-white">Resume</a>
-			<a href="{{route('home')}}" class="btn btn-primary text-white">Change Plan</a>
-	    </div>
-	</div>
-@endif
-<!-- current -->
-@if(auth()->user()->current_plan && !auth()->user()->current_plan->cancelled() && auth()->user()->subscribed(auth()->user()->current_plan->name))
-	<div class="col-12 mx-auto">
-	    <h2 class="">Current Plan</h2>
-	    <hr class="tw-border-b-2 w-full tw-border-gray-300"></hr>
-	    <div class="jumbotron">
-	     <p class="lead">Your are currently Subscribed to {{auth()->user()->current_plan->plan}}. Your Subscription will expire on {{\Carbon\Carbon::parse(auth()->user()->current_plan->cycle_ends_at)->isoFormat('ll')}}</p>
-	     	 <a href="{{route('cancel')}}" class="btn btn-primary text-white">cancel plan</a>
-			<a href="{{route('home')}}" class="btn btn-primary text-white">Change Plan</a>
-	    </div>
-	</div>
+@if(Auth::user()->status === 'onTrial')
+<div class="alert alert-warning">
+	@if(Auth::user()->trial_ends_at)
+		<span>You are currently subscribed to Free trial.Please subscribe to access more features</span>
+	@endif
+	@if(optional(Auth::user()->current_subscription)->trial_ends_at)
+		<span>You are currently subscribed to Free trial of {{auth()->user()->current_subscription->plan}} Your  Subscription will expire on {{auth()->user()->currentCycle()}}</span>
+	@endif
+</div>
 @endif

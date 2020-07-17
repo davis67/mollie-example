@@ -21,11 +21,12 @@
                                 </div>
                                 <div class="card-footer">
                                    <div class="card-footer">
-                                    @if(auth()->user() && auth()->user()->current_plan->plan == 'basic' && !auth()->user()->current_plan->cancelled())
-                                    <a href="{{route('billing', 'premium')}}" class="btn btn-primary">current plan</a>
+                                    @if(optional(Auth::user()->current_subscription)->plan === 'basic')
+                                     <a href="{{route('billing', 'premium')}}" class="btn btn-primary">current plan</a>
                                     @else
                                     <a href="{{route('subscriptions.store', 'premium')}}" class="btn btn-primary">Subscribe</a>
                                     @endif
+
                                 </div>
                                 </div>
                             </div>
@@ -42,7 +43,7 @@
                                     </ul>
                                 </div>
                                 <div class="card-footer">
-                                    @if(auth()->user() && auth()->user()->current_plan->plan == 'premium')
+                                    @if(optional(Auth::user()->current_subscription)->plan === 'premium')
                                     <a href="{{route('billing', 'premium')}}" class="btn btn-primary">current plan</a>
                                     @else
                                     <a href="{{route('subscriptions.store', 'premium')}}" class="btn btn-primary">Subscribe</a>

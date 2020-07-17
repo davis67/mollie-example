@@ -23,8 +23,8 @@ class CreateSubscriptionController extends Controller
 
             $name = ucfirst($plan) . ' membership';
 
-            // $result = $user->newSubscriptionViaMollieCheckout($name, $plan)->create();
-            $result = $user->newSubscription($name, $plan)->create();
+            $result = $user->newSubscriptionViaMollieCheckout($name, $plan)->create();
+            // $result = $user->newSubscription($name, $plan)->create();
             if(is_a($result, RedirectResponse::class)) {
                 return $result; // Redirect to Mollie checkout
             }

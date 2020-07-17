@@ -2,9 +2,10 @@
 
 namespace App;
 
+use Carbon\Carbon;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
  use Laravel\Cashier\Billable;
 
 class User extends Authenticatable
@@ -17,7 +18,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password',
+        'name', 'email', 'trial_ends_at', 'password',
     ];
 
     /**
@@ -42,16 +43,8 @@ class User extends Authenticatable
      *attach to the users collection
      * @return array An array of strings
      */
-    protected $appends = ['current_plan'];
+    protected $appends = ['current_subscription', 'status'];
 
-      /**
-     *  get the current plan
-     * @return obj
-     */
-    public function getCurrentPlanAttribute()
-    {
-        return auth()->user()->subscriptions()->latest()->first();
-    }
      /**
      * Get the receiver information for the invoice.
      * Typically includes the name and some sort of (E-mail/physical) address.
@@ -72,5 +65,114 @@ class User extends Authenticatable
     public function getExtraBillingInformation()
     {
         return null;
+    }
+
+    /**
+     * Get the current subscription plan
+     */
+    public function getCurrentSubscriptionAttribute()
+    {
+        return auth()->user()->subscriptions->isEmpty() ? null : $this->subscriptions->first();
+    }
+
+    /**
+     * Get the subscription status
+     */
+    public function getStatusAttribute()
+    {
+         if ($this->onTrial()) {
+            return 'onTrial';
+        }
+
+        if ($this->onGracePeriod()) {
+            return 'onGracePeriod';
+        }
+
+        if ($this->cancelled()) {
+            return 'cancelled';
+        }
+
+        if ($this->ended()) {
+            return 'ended';
+        }
+
+        if ($this->active()) {
+            return 'active';
+        }
+
+        return 'inactive';
+    }
+
+    /**
+     * Determine if the subscription is active.
+     */
+    protected function active(): bool
+    {
+        return is_null($this->current_subscription->ends_at) || $this->onTrial() || $this->onGracePeriod();
+    }
+
+    /**
+     * Determine if the subscription has ended and the grace period has expired.
+     */
+    protected function ended(): bool
+    {
+        return $this->current_subscription->cancelled() && !$this->current_subscription->onGracePeriod();
+    }
+
+    /**
+     * Determine if the subscription is within its trial period.
+     */
+    protected function onTrial(): bool
+    {
+        return $this->trial_ends_at || Carbon::parse($this->current_subscription->trial_ends_at)->isFuture();
+    }
+
+    /**
+     * Determine if the subscription is within its grace period after cancellation.
+     */
+    protected function onGracePeriod(): bool
+    {
+        return $this->current_subscription->ends_at && Carbon::parse($this->current_subscription->ends_at)->isFuture();
+    }
+
+    /**
+     * Determine if the subscription is recurring and not on trial.
+     */
+    protected function recurring(): bool
+    {
+        return !$this->onTrial() && !$this->current_subscription->cancelled();
+    }
+
+    /**
+     * Determine if the subscription is no longer active.
+     */
+    protected function cancelled(): bool
+    {
+        return !is_null($this->current_subscription->ends_at);
+    }
+
+    /**
+     * Determine if the user has a running subscription
+     */
+
+     public function hasRunningSubscription(): bool
+    {
+        $hasActiveSubscription = false;
+
+        foreach ($this->subscriptions as $subscription) {
+            if ($subscription->active()) {
+                $hasActiveSubscription = true;
+            }
+        }
+
+        return $hasActiveSubscription;
+    }
+
+    /**
+     * Dertemine Users current cycle
+     */
+
+    public function currentCycle(){
+        return Carbon::parse($this->current_subscription->cycle_ends_at)->format('m/d/Y');
     }
 }
